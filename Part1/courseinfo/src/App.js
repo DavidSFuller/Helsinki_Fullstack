@@ -5,20 +5,20 @@ return (
 )
 }
 
-const Content = (props) => {
+const Part = (props) => {
   console.log(props)
   return (
+    <p>{props.name} {props.exercises}</p>
+  )
+}
+
+const Content = (props) => {
+  return (
     <div>
-      <p>
-        {props.name1} {props.exercises1}
-      </p>
-      <p>
-        {props.name2} {props.exercises2}
-      </p>
-      <p>
-        {props.name3} {props.exercises3}
-      </p>
-    </div>
+      <Part name={props.name1} exercises={props.exercises1} />
+      <Part name={props.name2} exercises={props.exercises2} />
+      <Part name={props.name3} exercises={props.exercises3} />
+     </div>
 )
 }
 
