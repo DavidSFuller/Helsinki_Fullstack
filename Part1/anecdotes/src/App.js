@@ -21,6 +21,7 @@ const App = () => {
   
   const [selected, setSelected] = useState(0)
   const [votes, setVote] = useState(Array.from({ length: anecdotes.length }).fill(0))
+  const [mostVotes, setMost] = useState(-1)
   console.log('Votes', votes)
   
   // Math.getRandomInt gave error: "Uncaught TypeError: Math.getRandomInt is not a function"
@@ -36,15 +37,38 @@ const App = () => {
   copyVotes[selected] +=1
   console.log('mod copyVotes:', copyVotes)
   setVote(copyVotes)
+  console.log('mostVotes=',mostVotes, copyVotes[selected], copyVotes[mostVotes])
+  if (mostVotes === -1 || copyVotes[selected] > copyVotes[mostVotes]) {
+    setMost(selected)
+    console.log('Most votes set to ', mostVotes)
+  }
 }
 
 console.log(selected)
+
+  if (mostVotes===-1) {
+    console.log('mostVotes===-1')
+    return (
+      <div>
+        <h1>Anecdote of the day</h1>
+        {anecdotes[selected]}
+        <br/>Has {votes[selected]} votes
+        <br/><button onClick={handleVote}>vote</button>
+        <button onClick={handleNext}>next anecdote</button>
+      </div>
+    )
+  }
+  console.log('mostVotes not equal to -1')
+
   return (
     <div>
+      <h1>Anecdote of the day</h1>
       {anecdotes[selected]}
       <br/>Has {votes[selected]} votes
       <br/><button onClick={handleVote}>vote</button>
       <button onClick={handleNext}>next anecdote</button>
+      <h1>Anecdotes with most votes</h1>
+      {anecdotes[mostVotes]}
     </div>
   )
 }
