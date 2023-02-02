@@ -10,7 +10,7 @@ return (
 const StatisticLine = (props) => {
   console.log(props)
 return (
-    <div><b>{props.text} {props.amount}</b></div>
+    <tr><td>{props.text}</td><td>{props.amount}</td></tr>
 )
 }
 
@@ -20,12 +20,16 @@ const Results = ({good, neutral, bad, all}) => {
   }
   return (
     <div>
-      <StatisticLine text="good" amount={good}/>
-      <StatisticLine text="neutral" amount={neutral}/>
-      <StatisticLine text="bad" amount={bad}/>
-      <StatisticLine text="all" amount={all}/>
-      <StatisticLine text="average" amount={(good-bad)/all}/>
-      <StatisticLine text="positive" amount={good/all*100 + ' %'}/>
+      <table>
+        <tbody>
+          <StatisticLine text="good" amount={good}/>
+          <StatisticLine text="neutral" amount={neutral}/>
+          <StatisticLine text="bad" amount={bad}/>
+          <StatisticLine text="all" amount={all}/>
+          <StatisticLine text="average" amount={(good-bad)/all}/>
+          <StatisticLine text="positive" amount={good/all*100 + ' %'}/>
+        </tbody>
+      </table>
      </div>
   )
 }
