@@ -1,10 +1,9 @@
 import { useState } from 'react'
 
-function getRandomInt(max) {
+const getRandomInt = (max) => {
   const randomNumber = Math.random()
-  console.log('random',randomNumber,'max',max)
   const selection = Math.floor(randomNumber* max); // 0<=max<1
-  console.log('selection',selection)
+  console.log('getRandomInt',selection)
   return selection
 }
 
@@ -19,15 +18,33 @@ const App = () => {
     'Programming without an extremely heavy use of console.log is same as if a doctor would refuse to use x-rays or blood tests when diagnosing patients.',
     'The only way to go fast, is to go well.'
   ]
-   
-  // Math.getRandomInt gave error: "Uncaught TypeError: Math.getRandomInt is not a function"
+  
   const [selected, setSelected] = useState(0)
-  const handleClick = () => {setSelected(getRandomInt(anecdotes.length))}
+  const [votes, setVote] = useState(Array.from({ length: anecdotes.length }).fill(0))
+  console.log('Votes', votes)
+  
+  // Math.getRandomInt gave error: "Uncaught TypeError: Math.getRandomInt is not a function"
+  const handleNext = () => {
+    let selection = getRandomInt(anecdotes.length)
+    console.log('selection:',selection)
+    setSelected(selection)
+    }
 
+ const handleVote = () => {
+  const copyVotes = [ ...votes ]
+  console.log('To add 1 to element ', selected ,' from ', copyVotes[selected])
+  copyVotes[selected] +=1
+  console.log('mod copyVotes:', copyVotes)
+  setVote(copyVotes)
+}
+
+console.log(selected)
   return (
     <div>
       {anecdotes[selected]}
-      <br/><button onClick={handleClick}>next anecdote</button>
+      <br/>Has {votes[selected]} votes
+      <br/><button onClick={handleVote}>vote</button>
+      <button onClick={handleNext}>next anecdote</button>
     </div>
   )
 }
