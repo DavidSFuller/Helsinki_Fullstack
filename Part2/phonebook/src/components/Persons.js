@@ -1,9 +1,25 @@
-const Numbers = ({person}) => <div>{person.name} {person.number}</div>
-
-const Persons = ({persons}) => {
+const Numbers = ({person,removeFn}) => {
+ 
+//  console.log('in Numbers:',removeFn)
   return (
     <div>
-      {persons.map(person => <Numbers key={person.name} person={person} />)}
+      {person.name} {person.number+' '} 
+      <button onClick={removeFn}>
+          delete
+      </button>
+    </div>
+  )
+}
+
+const Persons = ({persons, removeFn}) => {
+//  console.log('In Persons:',removeFn)
+  return (
+    <div>
+      {persons.map(person =>
+         <Numbers
+           key={person.id}
+           person={person}
+           removeFn={() => removeFn(person.name,person.id)} />)}
     </div>
   )
 }
