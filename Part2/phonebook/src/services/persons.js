@@ -14,57 +14,17 @@ const create = newObject => {
 const remove = id => {
   const removeThis = baseUrl + '/' + id
   console.log('remove:', removeThis)
-  axios
-    .delete(removeThis)
-    .catch(function (error) {
-      if (error.response) {
-        if (error.response.status === 404) {
-          console.log('row no longer exists')
-        }
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.log(error.response.data);
-        console.log(error.response.status);
-        console.log(error.response.headers);
-      } else if (error.request) {
-        // The request was made but no response was received
-        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-        // http.ClientRequest in node.js
-        console.log(error.request);
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log('Error', error.message);
-      }
-    })
+  const request = axios.delete(removeThis)
+  return request.then(response => response.data)
 }
 
-const updatePerson = (id, person) => {
+const update = (id, person) => {
   const updateThis = baseUrl + '/' + id
   console.log('update:', updateThis,'to',person)
-  axios
-  .put(updateThis, person)
-  .catch(function (error) {
-    if (error.response) {
-      if (error.response.status === 404) {
-        console.log('row no longer exists')
-      }
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      console.log(error.response.data);
-      console.log(error.response.status);
-      console.log(error.response.headers);
-    } else if (error.request) {
-      // The request was made but no response was received
-      // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-      // http.ClientRequest in node.js
-      console.log(error.request);
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      console.log('Error', error.message);
-    }
-  })
+  const request = axios.put(updateThis, person)
+  return request.then(response => response.data)
 }
 
-const personService = {getAll, create, remove, updatePerson}
+const personService = {getAll, create, remove, update}
 
 export default personService

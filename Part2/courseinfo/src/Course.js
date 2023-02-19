@@ -1,4 +1,4 @@
-const Header = (props) => <h2>{props.name}</h2>
+const Header = (props) => <ul>name:{props.name}</ul>
 
 const Total = ({ sum }) => {
    return(
