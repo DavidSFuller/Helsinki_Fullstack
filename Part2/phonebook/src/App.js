@@ -74,7 +74,7 @@ const App = () => {
         })
         .catch( (error) => {
           console.log('result=',error.message)
-          setMyMessage(`Add for ${found.name} failed: ${error.message}`)
+          setMyMessage(`failed: ${error.message}`)
         })
       setTimeout(() => {setMyMessage(null)}, 5000)
     }
