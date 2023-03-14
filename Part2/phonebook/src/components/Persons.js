@@ -12,7 +12,7 @@ const Numbers = ({person,removeFn}) => {
 }
 
 const Persons = ({persons, removeFn}) => {
-//  console.log('In Persons:',removeFn)
+  console.log('In Persons:', persons, removeFn)
   return (
     <div>
       {persons.map(person =>

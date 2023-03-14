@@ -28,10 +28,21 @@ const App = () => {
       })
   }, [])
 
-  console.log('render', persons.length, 'persons')
-
   const addPerson = (event) => {
     event.preventDefault()
+    console.log('name:', newName, 'number:', newNumber)
+    if (newName==='') {
+      setMyMessage('Name is missing')
+      setTimeout(() => {setMyMessage(null)}, 5000)
+      return
+    }
+  
+    if (newNumber==='') {
+      setMyMessage('Number is missing')
+      setTimeout(() => {setMyMessage(null)}, 5000)
+      return
+    }
+  
     const found = persons.find(e => e.name === newName)
     console.log('found:',found)
     if ( found !== undefined ) {
@@ -51,13 +62,14 @@ const App = () => {
               setMyMessage(`Phone number for ${found.name} updated`)
             })
             .catch( (error) => {
-                console.log('result=',error.message)
+                console.log('result=',error)
                 if (error.response.status === 404) {
                   setPersons(persons.filter(p => p.id !== found.id))
                   setMyMessage(`Information for ${found.name} has already been removed from server`)
                 }
                 else
-                  setMyMessage(`Update for ${found.name} failed: ${error.message}`)
+                  setMyMessage(`*** Update for ${found.name} failed: ${error.response.data.error}`) 
+                  console.log('Error Object:', error)
             })
           setTimeout(() => {setMyMessage(null)}, 5000)        }
     }
@@ -73,8 +85,8 @@ const App = () => {
           setMyMessage(`Added ${newObject.name}`)
         })
         .catch( (error) => {
-          console.log('result=',error.message)
-          setMyMessage(`failed: ${error.message}`)
+          console.log(error.response.data.error)
+          setMyMessage(error.response.data.error)
         })
       setTimeout(() => {setMyMessage(null)}, 5000)
     }
@@ -82,6 +94,7 @@ const App = () => {
 
   const removePerson = (name,id) => {
     if(window.confirm('Delete ' + name + '?')) {
+      console.log('delete:',id)
       personService
         .remove(id)
         .then (() => {
