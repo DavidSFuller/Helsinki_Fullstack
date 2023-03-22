@@ -56,9 +56,25 @@ describe('Blog list tests step3', () => {
       .map(b => {
         const {id, ...x} = b
         return x})
-    console.log('NewBlog')
     
     expect(NewBlog).toContainEqual(blog)
+  })
+})
+
+describe('Blog list tests step4', () => {
+  const blog = {
+    title: 'no likes test',
+    author: 'Charles Chaplin',
+    url: 'https://reactpatterns.com/'
+  }
+
+  test('missing likes gets zero value', async () => {
+    const newid = await helper.addBlog(blog)
+    const uri = '/api/blogs/'+newid
+    console.log('uri',uri)
+    const response = await api.get(uri)
+    console.log('response.body', response.body)
+    expect(response.body.likes).toEqual(0)
   })
 })
 

@@ -6,19 +6,11 @@ const blogsInDb = async () => {
   return blogs.map(blog => blog.toJSON())
 }
 
-const addBlog = async () => {
-  const blog = new Blogs(
-    {
-      title: 'new test entry',
-      author: 'Michael Cain',
-      url: 'https://reactpatterns.com/',
-      likes: 7
-    }
-  )
-  await blog.save()
-  return blog.id.toString()
+const addBlog = async (blog) => {
+  const newBlog = new Blogs(blog)
+  await newBlog.save()
+  return newBlog.id.toString()
 }
-
 
 module.exports = {
   initialBlogs, blogsInDb, addBlog
