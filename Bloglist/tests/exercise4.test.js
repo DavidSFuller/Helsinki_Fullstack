@@ -45,18 +45,19 @@ describe('Blog list tests step3', () => {
     likes: 7
   }
 
-  test('posted entries are saved to the datbase', async () => {
-    const newid = await helper.addBlog(blog)
+  test('posted entries are saved to the database', async () => {
+    const response = await api
+      .post('/api/blogs')
+      .send(blog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
     const blogsAtEnd = await helper.blogsInDb()
-
     expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1)
-  
     const NewBlog = blogsAtEnd
-      .filter(b => b.id === newid)
+      .filter(b => b.id === response.body.id)
       .map(b => {
         const {id, ...x} = b
         return x})
-    
     expect(NewBlog).toContainEqual(blog)
   })
 })
@@ -69,12 +70,47 @@ describe('Blog list tests step4', () => {
   }
 
   test('missing likes gets zero value', async () => {
-    const newid = await helper.addBlog(blog)
-    const uri = '/api/blogs/'+newid
-    console.log('uri',uri)
-    const response = await api.get(uri)
-    console.log('response.body', response.body)
-    expect(response.body.likes).toEqual(0)
+    const response1 = await api
+      .post('/api/blogs')
+      .send(blog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const response2 = await api
+      .get(`/api/blogs/${response1.body.id}`)
+      .expect(200)
+
+    expect(response2.body.likes).toEqual(0)
+  })
+})
+
+describe('Blog list tests step5', () => {
+  const blog1 = {
+    author: 'missing title',
+    url: 'https://reactpatterns.com/',
+    likes: 1
+  }
+
+  const blog2 = {
+    title: 'missing url',
+    author: 'Michael Cain',
+    likes: 2
+  }
+
+  test('missing title test', async () => {
+    const response1 = await api
+      .post('/api/blogs')
+      .send(blog1)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+  })
+
+  test('missing url test', async () => {
+    const response2 = await api
+      .post('/api/blogs')
+      .send(blog2)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
   })
 })
 

@@ -6,9 +6,12 @@ blogRouter.get('/', async (request, response) => {
   response.json(blogs)
 })
   
-blogRouter.post('/', async (request, response) => {
-  const result = await Blog(request.body).save()
-  response.status(201).json(result)
+blogRouter.post('/', async (request, response, next) => {
+  try {
+    const result = await Blog(request.body).save()
+    response.status(201).json(result)
+  }
+  catch(error) {next(error)}
 })
 
 blogRouter.get('/:id', async (request, response) => {

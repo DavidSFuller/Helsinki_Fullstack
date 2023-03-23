@@ -1,17 +1,14 @@
 const Blogs = require('../models/bloglist')
 const initialBlogs = require('./testData')
+const supertest = require('supertest')
+const app = require('../src/app')
+const api = supertest(app)
 
 const blogsInDb = async () => {
   const blogs = await Blogs.find({})
   return blogs.map(blog => blog.toJSON())
 }
 
-const addBlog = async (blog) => {
-  const newBlog = new Blogs(blog)
-  await newBlog.save()
-  return newBlog.id.toString()
-}
-
 module.exports = {
-  initialBlogs, blogsInDb, addBlog
+  initialBlogs, blogsInDb
 }
