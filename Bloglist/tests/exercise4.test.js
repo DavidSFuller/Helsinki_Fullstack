@@ -103,6 +103,9 @@ describe('Blog list tests step5', () => {
       .send(blog1)
       .expect(400)
       .expect('Content-Type', /application\/json/)
+
+    const blogs = await helper.blogsInDb()
+    expect(blogs).toHaveLength(helper.initialBlogs.length)
   })
 
   test('missing url test', async () => {
@@ -111,7 +114,109 @@ describe('Blog list tests step5', () => {
       .send(blog2)
       .expect(400)
       .expect('Content-Type', /application\/json/)
+
+    const blogs = await helper.blogsInDb()
+    expect(blogs).toHaveLength(helper.initialBlogs.length)
   })
+})
+
+describe('Blog list expansions step1', () => {
+  test('single delete succeedes with status code 204 if it is valid', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const blogToDelete = blogsAtStart[0] // delete the first note
+
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .expect(204)
+
+    const blogsAtEnd = await helper.blogsInDb()
+
+    expect(blogsAtEnd).toHaveLength(blogsAtStart.length - 1)
+    expect(blogsAtEnd).not.toContainEqual(blogToDelete)
+  })
+})
+
+describe('Blog list expansions step2', () => {
+  test('update a single post, one field', async () => {
+    const initialBlogs = await helper.blogsInDb()
+    const idToUpdate = initialBlogs[0].id                  // update the first note
+    const blogChange = {author: 'updated entry'}           // change just the title
+    const updatedBlog = {                                  // this is what the blog should look like
+      title: initialBlogs[0].title,
+      author: blogChange.author,
+      url: initialBlogs[0].url,
+      likes: initialBlogs[0].likes
+    }
+    
+    await api
+      .post(`/api/blogs/${idToUpdate}`)
+      .send(blogChange)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+    const NewBlog = blogsAtEnd
+      .filter(b => b.id === idToUpdate)
+      .map(b => {
+        const {id, ...x} = b
+        return x})
+    expect(NewBlog).toContainEqual(updatedBlog)
+  })
+
+  test('update a single post to likes=0 (falsy value)', async () => {
+    const initialBlogs = await helper.blogsInDb()
+    const idToUpdate = initialBlogs[0].id                  // update the first note
+    const blogChange = {likes: 0}                          // change just the likes
+    const updatedBlog = {                                  // this is what the blog should look like
+      title: initialBlogs[0].title,
+      author: initialBlogs[0].author,
+      url: initialBlogs[0].url,
+      likes: blogChange.likes
+    }
+    //console.log('from,', initialBlogs[0], 'to', updatedBlog)
+      
+    await api
+      .post(`/api/blogs/${idToUpdate}`)
+      .send(blogChange)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+  
+    const blogsAtEnd = await helper.blogsInDb()
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+    const NewBlog = blogsAtEnd
+      .filter(b => b.id === idToUpdate)
+      .map(b => {
+        const {id, ...x} = b
+        return x})
+    expect(NewBlog).toContainEqual(updatedBlog)
+  })
+  
+  test('update a single post, all fields', async () => {
+    const initialBlogs = await helper.blogsInDb()
+    const idToUpdate = initialBlogs[0].id // update the first note
+    const updatedBlog = {
+      title: 'updated entry',
+      author: 'Updated Name',
+      url: 'https://updatedurl.com/',
+      likes: 99
+    }
+    await api
+      .post(`/api/blogs/${idToUpdate}`)
+      .send(updatedBlog)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+    const NewBlog = blogsAtEnd
+      .filter(b => b.id === idToUpdate)
+      .map(b => {
+        const {id, ...x} = b
+        return x})
+    expect(NewBlog).toContainEqual(updatedBlog)
+  })
+
 })
 
 afterAll(async () => {
