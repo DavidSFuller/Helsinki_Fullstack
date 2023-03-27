@@ -123,7 +123,7 @@ describe('Blog list tests step5', () => {
 describe('Blog list expansions step1', () => {
   test('single delete succeedes with status code 204 if it is valid', async () => {
     const blogsAtStart = await helper.blogsInDb()
-    const blogToDelete = blogsAtStart[0] // delete the first note
+    const blogToDelete = blogsAtStart[0] // delete the first blog
 
     await api
       .delete(`/api/blogs/${blogToDelete.id}`)
@@ -139,7 +139,7 @@ describe('Blog list expansions step1', () => {
 describe('Blog list expansions step2', () => {
   test('update a single post, one field', async () => {
     const initialBlogs = await helper.blogsInDb()
-    const idToUpdate = initialBlogs[0].id                  // update the first note
+    const idToUpdate = initialBlogs[0].id                  // update the first blog
     const blogChange = {author: 'updated entry'}           // change just the title
     const updatedBlog = {                                  // this is what the blog should look like
       title: initialBlogs[0].title,
@@ -194,7 +194,7 @@ describe('Blog list expansions step2', () => {
   
   test('update a single post, all fields', async () => {
     const initialBlogs = await helper.blogsInDb()
-    const idToUpdate = initialBlogs[0].id // update the first note
+    const idToUpdate = initialBlogs[0].id // update the first blog
     const updatedBlog = {
       title: 'updated entry',
       author: 'Updated Name',
