@@ -1,47 +1,27 @@
 const blogRouter = require('express').Router()
 const Blog = require('../models/bloglist')
 const logger = require('../utils/logger')
-const User = require('../models/user')
-const jwt = require('jsonwebtoken')
+const middleware = require('../utils/middleware')
 
-const getTokenFrom = request => {
-  const authorization = request.get('authorization')
-  logger.info('authorization is ', authorization)
-
-  if (authorization && authorization.startsWith('Bearer ')) {
-    return authorization.replace('Bearer ', '')
-  }
-  return null
-}
-
-blogRouter.get('/', async (request, response, next) => {
-  try {
-    const token = getTokenFrom(request)
-    logger.info('token is ', token)
-    if (token) {
-      const decodedToken = jwt.verify(token, process.env.SECRET)
-      if (!decodedToken.id) {
-        return response.status(401).json({ error: 'token invalid' })
-      }
-      const blogs = await Blog
-        .find({}).populate('user', { username: 1, name: 1 })
-      response.json(blogs)
-    }
-    else {
-      return response.status(401).json({ error: 'login required' })
-    }
-  }
-  catch(error) {next(error)}
+//******************************************************************************************** */
+blogRouter.get('/', async (request, response) => {
+  const blogs = await Blog
+    .find({}).populate('user', { username: 1, name: 1 })
+  response.json(blogs)
 })
 
-blogRouter.post('/', async (request, response, next) => {
+//******************************************************************************************** */
+blogRouter.post('/', middleware.userExtractor, async (request, response) => {
   const body = request.body
-  const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
-  if (!decodedToken.id) {
-    return response.status(401).json({ error: 'token invalid' })
+  if (request.user === undefined) {
+    return response.status(401).json({ error: 'login required' })
   }
-  const user = await User.findById(decodedToken.id)
+  if (request.user === null) {
+    return response.status(401).json({ error: 'login invalid' })
+  }
 
+  const user = request.user
+  
   const blog = new Blog({
     title: body.title,
     author: body.author,
@@ -49,72 +29,89 @@ blogRouter.post('/', async (request, response, next) => {
     likes: body.likes,
     user: user.id
   })
+  logger.info('blog is ', blog)
 
-  try {
-    const savedBlog = await blog.save()
-    user.blogs = user.blogs.concat(savedBlog._id)
-    await user.save()
-    response.status(201).json(savedBlog)
-  }
-  catch(error) {next(error)}
+  const savedBlog = await blog.save()
+  user.blogs = user.blogs.concat(savedBlog._id)
+  await user.save()
+  response.status(201).json(savedBlog)
 })
 
+//******************************************************************************************** */
 blogRouter.get('/:id', async (request, response) => {
+  logger.info('by id:', request.params.id)
   const blogs = await Blog
-    .findById({}).populate('user', { username: 1, name: 1 })
+    .findById(request.params.id).populate('user', { username: 1, name: 1 })
   response.json(blogs)
 })
 
-blogRouter.delete('/:id', async (request, response) => {
-  logger.info('request_delete',request.params.id, request.body)
-  const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
-  if (!decodedToken.id) {
-    return response.status(401).json({ error: 'token invalid' })
+//******************************************************************************************** */
+blogRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
+  if (request.user === undefined) {
+    return response.status(401).json({ error: 'login required' })
   }
-  const user = await User.findById(decodedToken.id)
-  const oldBlog = await Blog.findById(request.params.id)
-
-  if (oldBlog.user !== user.id) {
-    return response.status(401).json({ error: 'user cannot delete this row' })
+  if (request.user === null) {
+    return response.status(401).json({ error: 'login invalid' })
   }
 
-  await Blog.findByIdAndRemove(request.params.id)
-  user.blogs = user.blogs.filter(b => b !== request.params.id)
-  await user.save()
+  const user = request.user
 
-  response.status(204).end()
+  // get user of the blog entry - must match that for the session
+  const oldBlog =await Blog.findById(request.params.id)
+  logger.info('oldBlog.user.id:', oldBlog.user._id.valueOf())
+  logger.info('user:', user)
+  if (oldBlog) {
+    if (oldBlog.user._id.valueOf() !== user.id) {
+      return response.status(401).json({ error: 'user cannot delete this row' })
+    }
+
+    await Blog.findByIdAndRemove(request.params.id)
+
+    user.blogs = user.blogs.filter(b => b.valueOf() !== request.params.id)
+    await user.save()
+    response.status(204).end()
+  }
+  else {response.status(400).json({ error: 'bloglist entry no longer exists' })}
 })
 
-blogRouter.post('/:id', async (request, response, next) => {
-  const oldBlog = request.body
-  const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
-  if (!decodedToken.id) {
-    return response.status(401).json({ error: 'token invalid' })
-  }
-  const user = await User.findById(decodedToken.id)
+//******************************************************************************************** */
+blogRouter.post('/:id', middleware.userExtractor, async (request, response) => {
+  const newBlog = request.body
 
-  if (oldBlog.user !== user.id) {
+  if (request.user === undefined) {
+    return response.status(401).json({ error: 'login required' })
+  }
+  if (request.user === null) {
+    return response.status(401).json({ error: 'login invalid' })
+  }
+
+  const user = request.user
+
+  // get user of the blog entry - must match that for the session
+  const oldBlog =await Blog.findById(request.params.id)   //.populate('user', { username: 1, name: 1 })
+  if (oldBlog.user._id.valueOf() !== user.id) {
     return response.status(401).json({ error: 'user cannot update this row' })
   }
-  logger.info('update:', request.params.id, oldBlog)
-
+  
+  /**********
   const blog = {
-    ...(oldBlog.title && {title: oldBlog.title}),
-    ...(oldBlog.author && {author: oldBlog.author}),
-    ...(oldBlog.url && {url: oldBlog.url}),
-    ...((oldBlog.likes || oldBlog.likes === 0) && {likes: oldBlog.likes})
+    ...(newBlog.title && {title: newBlog.title}),
+    ...(newBlog.author && {author: newBlog.author}),
+    ...(newBlog.url && {url: newBlog.url}),
+    ...((newBlog.likes || newBlog.likes === 0) && {likes: newBlog.likes})
+  }
+  **********/
+  const blog = {
+    title: newBlog.title,
+    author: newBlog.author,
+    url: newBlog.url,
+    likes: newBlog.likes
   }
 
-  //logger.info('Update to:', request.params.id ,blog)
-  try {
-    const result = await Blog.findByIdAndUpdate(request.params.id, blog,
-      { new: true, runValidators: true, context: 'query' })
-    response.json(result)
-    //logger.info('result:', response)
-  }
-  catch(error) {
-    logger.error('error:', error)
-    next(error)}
+  logger.info('Update to:', request.params.id ,blog)
+  const result = await Blog.findByIdAndUpdate(request.params.id, newBlog,
+    { new: true, runValidators: true, context: 'query' })
+  response.json(result)
 })
 
 module.exports = blogRouter

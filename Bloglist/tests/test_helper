@@ -1,14 +1,116 @@
-const Blogs = require('../models/bloglist')
-const initialBlogs = require('./testData')
-const supertest = require('supertest')
-const app = require('../src/app')
-const api = supertest(app)
+const Blog = require('../models/bloglist')
+const User = require('../models/user')
+const bcrypt = require('bcrypt')
+const {initialUsers,initialBlogs} = require('./testData')
+const jwt = require('jsonwebtoken')
 
+//********************************************************** */
 const blogsInDb = async () => {
-  const blogs = await Blogs.find({})
+  const blogs = await Blog.find({})
   return blogs.map(blog => blog.toJSON())
 }
 
+//********************************************************** */
+const blogUserInDb = async () => {
+  const blogs = await await Blog
+    .find({})
+    .populate('user', { username: 1, name: 1 })
+  return blogs
+}
+
+/********************************************************** */
+const usersInDb = async () => {
+  const users = await User.find({})
+  return users.map(user => user.toJSON())
+}
+
+//********************************************************** */
+const getUser = async (username) => {
+  const user = await User.findOne({'username' : username})
+  return user
+}   
+
+const getPasswordHash = async (username) => {
+  const user = await getUser(username)
+  const passwordHash = user.passwordHash 
+  return passwordHash
+}
+
+// simple 'login' to just get a valid token - does not pasword validate
+const login = async (username) => {
+  const user = await getUser(username)
+  const userForToken = {
+    username: user.username,
+    id: user._id,
+  }
+
+  // token expires in 60 seconds
+  const token = jwt.sign(
+    userForToken, 
+    process.env.SECRET,
+    { expiresIn: 60 }
+  )
+  return token
+}
+
+//********************************************************** */
+const resetDB = async() => {
+  await Blog.deleteMany({})
+  await User.deleteMany({})
+
+  const saltRounds = 10
+  const userObjects = initialUsers
+    .map(
+      async ({username, name, password}) =>
+      {
+        const passwordHash = await bcrypt.hash(password, saltRounds)
+        const userhash = await new User ({
+          username,
+          name,
+          passwordHash
+        }).save()
+        return userhash
+      }
+    )
+  await Promise.all(userObjects)
+  const users = await User.find() // get all users - we update this later
+
+  const blogObjects = initialBlogs
+    .map(async ({title, author, url, likes, username}) => {
+      const user = users.find(u => u.username === username)
+      const userBlog = new Blog(
+        { title,
+          author,
+          url,
+          likes,
+          user: user.id
+        })
+      await userBlog.save()
+      return userBlog
+    })
+  await Promise.all(blogObjects)
+  const blogs = await Blog.find().populate('user', { username: 1})
+
+  // Now go back and update users with the bloglist
+  const newUsers = blogs.reduce((updUsers, blog) => {
+  const updUser = updUsers.findIndex(u => u.username === blog.user.username)
+   if (updUser >= 0) {
+      updUsers[updUser].blogs = updUsers[updUser].blogs.concat(blog.id)
+    }
+    return updUsers
+  }, users)
+   const newUpdates = newUsers.map(async (user) => {
+    await user.save()
+  })
+
+  await Promise.all(newUpdates)
+}
+
 module.exports = {
-  initialBlogs, blogsInDb
+  blogsInDb,
+  usersInDb,
+  resetDB,
+  login,
+  getUser,
+  blogUserInDb
 }
