@@ -16,9 +16,7 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    console.log('firing useEffect for logon');
     const loggedUserJSON = window.localStorage.getItem("loggedBlogappUser");
-    console.log('loggedUserJSON:', loggedUserJSON)
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON);
       setUser(user);
@@ -74,13 +72,20 @@ const App = () => {
   );
 
   const showHeader = () => <h2>blogs</h2>;
-  
+
+  const handleLogout = async (event) => {
+    window.localStorage.removeItem("loggedBlogappUser");
+  };
+
   const showUser = () => (
-    <div>
-      <p>
-        {user.name} <nbsp /> logged in
-      </p>
-    </div>
+    <form onSubmit={handleLogout}>
+      <div>
+        <p>
+          {user.name} &nbsp logged in&nbsp;
+          <button type="submit">logout</button>
+        </p>
+      </div>
+    </form>
   );
 
   const showBlogs = () => (
