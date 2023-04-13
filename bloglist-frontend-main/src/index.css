@@ -1,4 +1,4 @@
-/*
+
   h1 {
     color: green;
     font-style: italic;
@@ -6,10 +6,15 @@
   
   .blog {
     color: grey;
-    padding-top: 5px;
+    padding-top: 10px;
+    padding-left: 2;
     font-size: 15px;
+    border: solid;
+    border-width: 1;
+    border-radius: 5px;
+    margin-bottom: 5px;
   }
-*/  
+
   .error {
     color: red;
     background: lightgrey;
@@ -27,4 +32,8 @@
     border-radius: 5px;
     padding: 10px;
     margin-bottom: 10px;
+  }
+  .deletebutton {
+    background-color: blue;
+    color: white;
   }

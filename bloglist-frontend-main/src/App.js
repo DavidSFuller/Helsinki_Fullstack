@@ -1,8 +1,12 @@
-import { useState, useEffect } from "react";
-import Blog from "./components/Blog";
+import { useState, useEffect, useRef } from "react";
 import Notification from "./components/Notification";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
+import ShowBlogs from "./components/ShowBlogs";
+import Togglable from "./components/Togglable";
+import NewBlogForm from "./components/NewBlogForm";
+
+const sortBlogs = (blogs) => blogs.sort((a, b) => b.likes - a.likes);
 
 //*******************************************************/
 const App = () => {
@@ -11,30 +15,13 @@ const App = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
-  const [title, setTitle] = useState("");
-  const [author, setAuthor] = useState("");
-  const [url, setUrl] = useState("");
-
-  //***************
-  // EVENT HANDLERS
-  //***************
-
-  const handleTitleChange = (event) => {
-    setTitle(event.target.value);
-  };
-  const handleAuthorChange = (event) => {
-    setAuthor(event.target.value);
-  };
-  const handleUrlChange = (event) => {
-    setUrl(event.target.value);
-  };
 
   // *********************
   // Use Effect procedures
   // *********************
 
   useEffect(() => {
-    blogService.getAll().then((blogs) => setBlogs(blogs));
+    blogService.getAll().then((blogs) => setBlogs(sortBlogs(blogs)));
   }, []);
 
   useEffect(() => {
@@ -42,34 +29,36 @@ const App = () => {
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON);
       setUser(user);
-      console.log("user:", user);
       blogService.setToken(user.token);
     }
   }, []);
 
-  const queueMessage = (message) => {
+  const logMessage = (message) => {
     setMessage(message);
     setTimeout(() => {
       setMessage(null);
     }, 5000);
-  }
+  };
 
   // ***************************************
   const handleLogin = async (event) => {
     event.preventDefault();
 
     try {
-      const user = await loginService.login({
+      const loginuser = await loginService.login({
         username,
         password,
       });
-      window.localStorage.setItem("loggedBlogappUser", JSON.stringify(user));
-      blogService.setToken(user.token);
-      setUser(user);
+      window.localStorage.setItem(
+        "loggedBlogappUser",
+        JSON.stringify(loginuser)
+      );
+      blogService.setToken(loginuser.token);
+      setUser(loginuser);
       setUsername("");
       setPassword("");
     } catch (exception) {
-      queueMessage({text:"Wrong credentials", type: 'error'});
+      logMessage({ text: "Wrong credentials", type: "error" });
     }
   };
 
@@ -123,59 +112,90 @@ const App = () => {
     </form>
   );
 
-  // ***************************************
-  const ShowBlogs = () => (
-    <div>
-      {blogs.map((blog) => (
-        <Blog key={blog.id} blog={blog} />
-      ))}
-    </div>
-  );
+  const blogFormRef = useRef();
+  const bloghideRef = useRef();
 
   // ***************************************
-  const addBlog = (event) => {
-    event.preventDefault();
-    const blogObject = { title, author, url };
-    console.log("blogObject:", blogObject);
-
-    blogService.create(blogObject).then((returnedBlog) => {
-      setBlogs(blogs.concat(returnedBlog));
-    });
-    queueMessage({text:`a new blog "${title}" by ${author} added`, type: 'info'});
-    setTitle("");
-    setAuthor("");
-    setUrl("");
+  const addBlog = (blogObject) => {
+    try {
+      blogService.create(blogObject).then((returnedBlog) => {
+        const newBlog = { ...returnedBlog, user: user };
+        setBlogs(blogs.concat(newBlog));
+        logMessage({
+          text: `a new blog "${returnedBlog.title}" by ${returnedBlog.author} added`,
+          type: "info",
+        });
+        blogFormRef.current.toggleVisibility();
+      });
+    } catch (exception) {
+      //console.log(exception);
+      logMessage({ text: "failed to add blog", type: "error" });
+    }
   };
 
-  const createNew = () => (
-    <div>
-      <h2>create new</h2>
-      <form onSubmit={addBlog}>
-        title:&nbsp;
-        <input value={title} onChange={handleTitleChange} />
-        <br />
-        author:&nbsp;
-        <input value={author} onChange={handleAuthorChange} />
-        <br />
-        url:&nbsp;
-        <input value={url} onChange={handleUrlChange} />
-        <br />
-        <button type="submit">create</button>
-      </form>
-    </div>
+  // ***************************************
+  const likeit = (blogObject) => {
+    try {
+      blogService
+        .update(blogObject.id, { likes: blogObject.likes + 1 })
+        .then((returnedBlog) => {
+          const newBlog = { ...blogObject, likes: blogObject.likes + 1 };
+          setBlogs(
+            sortBlogs(
+              blogs.map((blog) => (blog.id === blogObject.id ? newBlog : blog))
+            )
+          );
+          //logMessage({
+          //  text: `liked "${returnedBlog.title} by ${returnedBlog.author}"`,
+          //  type: "info",
+          //});
+        });
+    } catch (exception) {
+      //console.log(exception);
+      logMessage({ text: "could not update likes", type: "error" });
+    }
+  };
+
+  const deleteBlog = (blogObject) => {
+    try {
+      blogService
+        .remove(blogObject.id)
+        .then((status) => {
+          if (status === 204) {
+            setBlogs(blogs.filter(blog => blog.id !== blogObject.id));
+            bloghideRef.current.toggleOff(blogObject.id);
+            logMessage({
+              text: `Blog "${blogObject.title}" by ${blogObject.author} removed.`,
+              type: "info",
+            });
+          }
+          else {
+            logMessage("blog was not removed.", "error");
+          }
+        });
+    } catch (exception) {
+      //console.log(exception);
+      logMessage({ text: "could not delete this blog", type: "error" });
+    }
+  }
+
+  const blogForm = () => (
+    <Togglable buttonLabel="create new blog" ref={blogFormRef}>``
+      <NewBlogForm createBlog={addBlog} />
+    </Togglable>
   );
 
   //***********
   // Main code
   //***********
   if (user) {
-    return (
+     return (
       <div>
         <ShowHeader />
         <Notification message={message} />
         <ShowUser />
-        {createNew()}
-        <ShowBlogs />
+        {blogForm()}
+        <ShowBlogs blogs={blogs} likeFn={likeit} delFn={deleteBlog} username={user.username} ref={bloghideRef}/>
       </div>
     );
   } else {
