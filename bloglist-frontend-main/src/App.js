@@ -118,7 +118,6 @@ const App = () => {
   // ***************************************
   const addBlog = (blogObject) => {
     blogService.create(blogObject).then((returnedBlog) => {
-      console.log("addblog:", returnedBlog);
       if (returnedBlog === undefined) {
         logMessage({ text: "failed to add blog", type: "error" });
       } else if (returnedBlog === null) {
