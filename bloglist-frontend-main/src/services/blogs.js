@@ -13,21 +13,36 @@ const getAll = () => {
 
 const update = async (id, updates) => {
   const config = { headers: { Authorization: token } };
-  const response = await axios.put(`${baseUrl}/${id}`, updates, config);
-  return response.data;
+  let response = undefined;
+  try {
+    response = await axios.put(`${baseUrl}/${id}`, updates, config);
+  } catch (error) {
+    return error.response.status;
+  }
+  return response.status;
 };
 
 const remove = async (id, updates) => {
   const config = { headers: { Authorization: token } };
-  const response = await axios.delete(`${baseUrl}/${id}`, config);
+  let response = undefined;
+  try {
+    response = await axios.delete(`${baseUrl}/${id}`, config);
+  } catch (error) {
+    return error.response.status;
+  }
   return response.status;
 };
 
 const create = async (newObject) => {
   const config = { headers: { Authorization: token } };
 
-  const response = await axios.post(baseUrl, newObject, config);
-  return response.data;
+  try {
+    const response = await axios.post(baseUrl, newObject, config);
+    return response.data;
+  } catch (error) {
+    console.log(error.response.data.error);
+    return error.response.data.error === "login expired" ? null : undefined;
+  }
 };
 
 // eslint-disable-next-line import/no-anonymous-default-export

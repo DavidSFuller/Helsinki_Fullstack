@@ -117,8 +117,18 @@ const App = () => {
 
   // ***************************************
   const addBlog = (blogObject) => {
-    try {
-      blogService.create(blogObject).then((returnedBlog) => {
+    blogService.create(blogObject).then((returnedBlog) => {
+      console.log("addblog:", returnedBlog);
+      if (returnedBlog === undefined) {
+        logMessage({ text: "failed to add blog", type: "error" });
+      } else if (returnedBlog === null) {
+        logMessage({
+          text: "Login expired. Please log in again.",
+          type: "warning",
+        });
+        handleLogout();
+        setUser(null);
+      } else {
         const newBlog = { ...returnedBlog, user: user };
         setBlogs(blogs.concat(newBlog));
         logMessage({
@@ -126,61 +136,69 @@ const App = () => {
           type: "info",
         });
         blogFormRef.current.toggleVisibility();
-      });
-    } catch (exception) {
-      //console.log(exception);
-      logMessage({ text: "failed to add blog", type: "error" });
-    }
+      }
+    });
   };
 
   // ***************************************
   const likeit = (blogObject) => {
-    try {
-      blogService
-        .update(blogObject.id, { likes: blogObject.likes + 1 })
-        .then((returnedBlog) => {
+    blogService
+      .update(blogObject.id, { likes: blogObject.likes + 1 })
+      .then((status) => {
+        if (status === 200) {
           const newBlog = { ...blogObject, likes: blogObject.likes + 1 };
           setBlogs(
             sortBlogs(
               blogs.map((blog) => (blog.id === blogObject.id ? newBlog : blog))
             )
           );
-          //logMessage({
-          //  text: `liked "${returnedBlog.title} by ${returnedBlog.author}"`,
-          //  type: "info",
-          //});
-        });
-    } catch (exception) {
-      //console.log(exception);
-      logMessage({ text: "could not update likes", type: "error" });
-    }
+        } else if (status === 401) {
+          logMessage({
+            text: "Login expired. Please log in again.",
+            type: "warning",
+          });
+          handleLogout();
+          setUser(null);
+        } else {
+          logMessage({
+            text: `could not update likes (${status})`,
+            type: "error",
+          });
+        }
+      });
   };
 
   const deleteBlog = (blogObject) => {
-    try {
-      blogService
-        .remove(blogObject.id)
-        .then((status) => {
-          if (status === 204) {
-            setBlogs(blogs.filter(blog => blog.id !== blogObject.id));
-            bloghideRef.current.toggleOff(blogObject.id);
-            logMessage({
-              text: `Blog "${blogObject.title}" by ${blogObject.author} removed.`,
-              type: "info",
-            });
-          }
-          else {
-            logMessage("blog was not removed.", "error");
-          }
-        });
-    } catch (exception) {
-      //console.log(exception);
-      logMessage({ text: "could not delete this blog", type: "error" });
+    if (
+      window.confirm(
+        `Remove blog "${blogObject.title}" by ${blogObject.author}?`
+      )
+    ) {
+      blogService.remove(blogObject.id).then((status) => {
+        console.log("status:", status);
+        if (status === 204) {
+          setBlogs(blogs.filter((blog) => blog.id !== blogObject.id));
+          bloghideRef.current.toggleOff(blogObject.id);
+          logMessage({
+            text: `Blog "${blogObject.title}" by ${blogObject.author} removed.`,
+            type: "info",
+          });
+        } else if (status === 401) {
+          logMessage({
+            text: "Login expired. please log in again.",
+            type: "warning",
+          });
+          handleLogout();
+          setUser(null);
+        } else {
+          logMessage({ text: `blog was not removed.${status}`, type: "error" });
+        }
+      });
     }
-  }
+  };
 
   const blogForm = () => (
-    <Togglable buttonLabel="create new blog" ref={blogFormRef}>``
+    <Togglable buttonLabel="create new blog" ref={blogFormRef}>
       <NewBlogForm createBlog={addBlog} />
     </Togglable>
   );
@@ -189,13 +207,19 @@ const App = () => {
   // Main code
   //***********
   if (user) {
-     return (
+    return (
       <div>
         <ShowHeader />
         <Notification message={message} />
         <ShowUser />
         {blogForm()}
-        <ShowBlogs blogs={blogs} likeFn={likeit} delFn={deleteBlog} username={user.username} ref={bloghideRef}/>
+        <ShowBlogs
+          blogs={blogs}
+          likeFn={likeit}
+          delFn={deleteBlog}
+          username={user.username}
+          ref={bloghideRef}
+        />
       </div>
     );
   } else {

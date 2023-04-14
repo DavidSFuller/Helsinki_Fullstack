@@ -45,7 +45,7 @@ const ShowBlogs = forwardRef((props, ref) => {
       return (
         <div className="blog">
           {blog.title} {blog.author}&nbsp;
-          <button onClick={() => toggleOn(blog.id)}>show</button>
+          <button onClick={() => toggleOn(blog.id)}>view</button>
         </div>
       );
     }

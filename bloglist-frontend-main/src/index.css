@@ -24,6 +24,15 @@
     padding: 10px;
     margin-bottom: 10px;
   }
+  .warning {
+    color: black;
+    background: rgb(242, 211, 8);
+    font-size: 20px;
+    border-style: solid;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
   .info {
     color: rgb(62, 128, 0);
     background: lightgrey;
