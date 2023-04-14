@@ -42,7 +42,7 @@ const App = () => {
 
   // ***************************************
   const handleLogin = async (event) => {
-    event.preventDefault();
+    event.preventDefault(username,password);
 
     try {
       const loginuser = await loginService.login({
@@ -58,6 +58,7 @@ const App = () => {
       setUsername("");
       setPassword("");
     } catch (exception) {
+      console.log(exception);
       logMessage({ text: "Wrong credentials", type: "error" });
     }
   };
@@ -96,6 +97,7 @@ const App = () => {
   const ShowHeader = () => <h2>blogs</h2>;
 
   // ***************************************
+  // eslint-disable-next-line no-unused-vars
   const handleLogout = (event) => {
     window.localStorage.removeItem("loggedBlogappUser");
   };
@@ -174,7 +176,6 @@ const App = () => {
       )
     ) {
       blogService.remove(blogObject.id).then((status) => {
-        console.log("status:", status);
         if (status === 204) {
           setBlogs(blogs.filter((blog) => blog.id !== blogObject.id));
           bloghideRef.current.toggleOff(blogObject.id);

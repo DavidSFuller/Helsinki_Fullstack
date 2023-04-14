@@ -22,7 +22,7 @@ const update = async (id, updates) => {
   return response.status;
 };
 
-const remove = async (id, updates) => {
+const remove = async (id) => {
   const config = { headers: { Authorization: token } };
   let response = undefined;
   try {
@@ -45,5 +45,4 @@ const create = async (newObject) => {
   }
 };
 
-// eslint-disable-next-line import/no-anonymous-default-export
 export default { getAll, setToken, create, update, remove };

@@ -1,7 +1,7 @@
-import { useState, useImperativeHandle, forwardRef } from 'react'
+import { useState, useImperativeHandle, forwardRef } from "react";
 const ShowBlogs = forwardRef((props, ref) => {
   const [showDetail, setShowDetail] = useState([]);
-  const { blogs, likeFn, delFn, username } = props
+  const { blogs, likeFn, delFn, username } = props;
 
   const toggleOff = (blogId) => {
     const shows = showDetail.filter((x) => x.id !== blogId);
@@ -17,8 +17,8 @@ const ShowBlogs = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => {
     return {
       toggleOff
-    }
-  })
+    };
+  });
 
   const Blog = ({ blog }) => {
     if (showDetail.filter((x) => x.id === blog.id).length !== 0) {
@@ -58,5 +58,7 @@ const ShowBlogs = forwardRef((props, ref) => {
     </div>
   );
 });
+
+ShowBlogs.displayName = "ShowBlogs";
 
 export default ShowBlogs;
