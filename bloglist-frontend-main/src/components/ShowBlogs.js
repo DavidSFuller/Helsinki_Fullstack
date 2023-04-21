@@ -25,17 +25,17 @@ const ShowBlogs = forwardRef((props, ref) => {
       return (
         <div className="blog">
           {blog.title} {blog.author}&nbsp;
-          <button onClick={() => toggleOff(blog.id)}>hide</button>
+          <button id="hide-button" onClick={() => toggleOff(blog.id)}>hide</button>
           <div>
             {blog.url}
             <br />
             likes&nbsp;{blog.likes}&nbsp;
-            <button onClick={() => likeFn(blog)}>like</button>
+            <button id="likes-button" onClick={() => likeFn(blog)}>like</button>
             <br />
             {blog.user.name}
             {username === blog.user.username && (
               <div>
-                <button className="deletebutton" onClick={() => delFn(blog)}>delete</button>
+                <button id="delete-button" className="deletebutton" onClick={() => delFn(blog)}>delete</button>
               </div>
             )}
           </div>
@@ -45,7 +45,7 @@ const ShowBlogs = forwardRef((props, ref) => {
       return (
         <div className="blog">
           {blog.title} {blog.author}&nbsp;
-          <button onClick={() => toggleOn(blog.id)}>view</button>
+          <button id="view-button" onClick={() => toggleOn(blog.id)}>view</button>
         </div>
       );
     }
