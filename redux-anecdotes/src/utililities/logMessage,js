@@ -1,0 +1,9 @@
+import { useDispatch } from "react-redux";
+import { notificationChange } from "../reducers/notificationChange";
+
+const logMessage = (message) => {
+    const dispatch = useDispatch();
+    dispatch(notificationChange(message));
+}
+
+export default logMessage;
